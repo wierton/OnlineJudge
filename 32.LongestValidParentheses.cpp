@@ -6,27 +6,28 @@
 class Solution {
   public:
 	int longestValidParentheses(std::string s) {
-	  std::stack<char> stack;
-	  std::size_t curr_len = 0, max_len = 0;
+	  std::vector<std::string::iterator> stack;
+	  std::size_t max_len = 0;
+	  std::string::iterator start = s.begin();
 	  for(auto it = s.begin(); it != s.end(); ++it) {
 		if(*it == '(') {
-		  stack.push(*it);
+		  stack.push_back(it);
 		}
 
 		if(*it == ')') {
 		  if(stack.size() == 0) {
-			curr_len = 0;
-		  } else if(stack.top() == '(') {
-			stack.pop();
-			curr_len ++;
+			start = it + 1;
+		  } else if(*stack.back() == '(') {
+			stack.pop_back();
+			if(stack.empty()) {
+			  max_len = std::max(max_len, static_cast<std::size_t>(it - start) + 1);
+			} else {
+			  max_len = std::max(max_len, static_cast<std::size_t>(it - stack.back()));
+			}
 		  }
 		}
-
-		if(curr_len >= max_len) {
-		  max_len = curr_len;
-		}
 	  }
-	  return max_len * 2;
+	  return max_len;
 	}
 };
 
@@ -35,7 +36,7 @@ int main() {
   Solution sol;
 
   std::vector<const char *> input = {
-	"(()", ")()())", "()(()"
+	"()", "(()", ")()())", "()(()", ")()())"
   };
 
   for(auto it = input.begin(); it != input.end(); ++it) {
