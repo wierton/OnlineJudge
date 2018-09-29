@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <utility>
 
+// #define DEBUG
 
 template<std::size_t D, class T> class NDArray;
 
@@ -97,56 +98,86 @@ public:
 };
 
 using TwoDArray = NDArray<2>;
+using ThreeDArray = NDArray<3>;
 
-using Grid = std::vector<std::vector<int>>;
 class Solution {
-  public:
-    int minPathSum(Grid &obstacleGrid) {
-	  // assume m and n is greater than 0
-	  std::size_t m = obstacleGrid.size();
-	  if(m == 0) return 0;
+public:
+  bool isScramble(std::string &word1, std::string &word2) {
+	std::size_t m = word1.size(), n = word2.size();
+	if(m != n) return false;
+	if(m == 0 || n == 0) return true;
+	std::size_t len = m;
 
-	  std::size_t n = obstacleGrid[0].size();
-	  if(n == 0) return 0;
+	ThreeDArray arr(m, n, len);
 
-	  TwoDArray arr(m, n);
-
-	  arr[0][0] = obstacleGrid[0][0];
-	  for(auto i = 1u; i < m; i++) {
-		arr[i][0] = obstacleGrid[i][0] + arr[i - 1][0];
-	  }
-
-	  for(auto i = 1u; i < n; i++) {
-		arr[0][i] = obstacleGrid[0][i] + arr[0][i - 1];
-	  }
-
-	  for(auto i = 1u; i < m; i++) {
-		for(auto j = 1u; j < n; j++) {
-		  arr[i][j] = obstacleGrid[i][j] + std::min(arr[i - 1][j], arr[i][j - 1]);
+	for(auto k = 0u; k < len; k++) {
+	  for(auto i = 0u; i < len; i++) {
+		for(auto j = 0u; j < len; j++) {
+		  arr[i][j][0] = word1[i] == word2[j];
 		}
 	  }
+	}
 
-	  return arr[m - 1][n - 1];
-    }
+	for(auto k = 1u; k < len; k++) {
+	  for(auto i = 0u; i + k < len; i++) {
+		for(auto j = 0u; j + k < len; j++) {
+		  arr[i][j][k] = false;
+		  for(auto t = 0u; t < k; t++) {
+#ifdef DEBUG
+			printf("k = %d, t = %d\n", k, t);
+			printf("arr[%d, %d, %d]=%d && arr[%d, %d, %d]=%d\n",
+				i, j, t, arr[i][j][t],
+				i + t + 1, j + t + 1, k - t - 1,
+				arr[i + t + 1][j + t + 1][k - t - 1]
+				);
+			printf("arr[%d, %d, %d]=%d && arr[%d, %d, %d]=%d\n",
+			  i, j + k - t, t,
+			  arr[i][j + k - t][t],
+			  i + t + 1, j, k - t - 1,
+			  arr[i + t + 1][j][k - t - 1]
+			);
+#endif
+			if(
+			  (arr[i][j][t] && arr[i + t + 1][j + t + 1][k - t - 1]) ||
+			  (arr[i][j + k - t][t] && arr[i + t + 1][j][k - t - 1])
+			) {
+			  arr[i][j][k] = true;
+			  break;
+			}
+		  }
+#ifdef DEBUG
+		  printf("----> arr[%d, %d, %d] = %d\n", i, j, k, arr[i][j][k]);
+#endif
+		}
+	  }
+	}
+
+	/*
+	for(auto k = 0u; k < len; k++) {
+	  for(auto i = 0u; i < len; i++) {
+		for(auto j = 0u; j < len; j++) {
+		  printf("%d, %d, %d: %d\n", i, j, k, arr[i][j][k]);
+		}
+	  }
+	}
+	*/
+
+	return arr[0][0][len - 1];
+  }
 };
-
-using ThreeDArray = NDArray<3>;
 
 int main() {
   Solution sol;
 
-  ThreeDArray arr(2u, 3u, 4u);
-  arr[0][1][2] = 1234567;
-  std::cout << arr[0][1][2] << ", " << *(&arr[0][0][0] + 6) << std::endl;
-
-  std::vector<Grid> input = {
-	{ {1,3,1},
-	  {1,5,1},
-	  {4,2,1}, },
+  std::vector<std::pair<std::string, std::string>> input = {
+	{ "great", "rgeat" },
+	{ "abcde", "caebd" },
+	{ "aa", "ab" },
+	{ "abc", "bca" },
   };
 
   for(auto it = input.begin(); it != input.end(); ++it) {
-	std::cout << sol.minPathSum(*it) << "\n";
+	std::cout << sol.isScramble(it->first, it->second) << "\n";
   }
   return 0;
 }
