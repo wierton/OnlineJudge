@@ -75,7 +75,7 @@ class NDArray {
 public:
   template<class...Args,
 	class=typename std::enable_if<NDCompatibilityChecker<T, Args...>::value, void>::type
-  > NDArray(Args&&...args) :
+  > explicit NDArray(Args&&...args) :
 	shape(new ShapeT {std::forward<Args>(args)...}),
 	attr(ND_RAW)
   {
